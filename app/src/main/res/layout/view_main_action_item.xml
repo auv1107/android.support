@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.antiless.support.business.main.mvp.view.MainActionItemView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="4dp">
+
+    <TextView
+        android:id="@+id/textAction"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_round_white_4dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:textColor="@color/colorTextPrimary"
+        android:textStyle="bold"/>
+
+</com.antiless.support.business.main.mvp.view.MainActionItemView>

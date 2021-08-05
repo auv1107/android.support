@@ -1,0 +1,5 @@
+include ':design'
+include ':exts'
+include ':base'
+include ':app'
+rootProject.name = "support"
