@@ -14,10 +14,19 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <View
+            android:id="@+id/rawArc"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/holo_blue_light"/>
     </com.antiless.support.design.arclayout.ArcLayout>
+
+    <Button
+        android:id="@+id/btn2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:text="Add New"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <Button
         android:id="@+id/btn"
