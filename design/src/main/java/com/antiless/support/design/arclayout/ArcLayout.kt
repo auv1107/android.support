@@ -256,6 +256,9 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
     }
 
     private fun smoothScrollTo(index: Int) {
+        if (index <= 0 || index >= childCount - 1) {
+            return
+        }
         val dx = if (index == state.currentIndex) {
             -state.offset
         } else {
