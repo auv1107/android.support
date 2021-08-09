@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
@@ -25,12 +24,30 @@ import kotlin.math.sqrt
 class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attrs) {
 
     private val state = State()
+
     private val flingScroller = OverScroller(context)
     private val settleScroller = Scroller(context)
+
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     private val maximumVelocity = ViewConfiguration.get(context).scaledMaximumFlingVelocity
+    private val minimumVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
     private val velocityTracker = VelocityTracker.obtain()
-    private var contentWidth = 0
+
+    private val lastPoint = PointF()
+
+    private val scrollStateListeners = mutableListOf<OnScrollChangeListener>()
+
+    /**
+     * x 方向滚动距离
+     */
+    private var arcScrollX = 0f
+        set(value) {
+            if (field != value) {
+                val delta = value - field
+                field = value
+                updateOffsetAndCurrentIndex(delta)
+            }
+        }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -44,9 +61,6 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             val frame = computeChildFrame(i)
             child.layout(frame.left, frame.top, frame.right, frame.bottom)
         }
-        val firstFrame = computeChildFrame(0)
-        val lastFrame = computeChildFrame(childCount - 1)
-        contentWidth = lastFrame.right - firstFrame.left
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -61,125 +75,38 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
         super.dispatchDraw(canvas)
     }
 
-    override fun addView(child: View?, index: Int, params: LayoutParams?) {
-        super.addView(child, index, params)
-    }
-
-    override fun removeView(view: View?) {
-        super.removeView(view)
-    }
-
-    override fun onViewRemoved(child: View?) {
-        super.onViewRemoved(child)
-    }
-
-    override fun onViewAdded(child: View?) {
-        super.onViewAdded(child)
-//        computeCurrentIndexAfterAdded(indexOfChild(child))
-    }
-
     override fun computeScroll() {
         super.computeScroll()
         if (settleScroller.computeScrollOffset()) {
             arcScrollX = if (settleScroller.isFinished) {
-//                validateOffsetAndCurrentIndex()
+                notifyScrollStateChanged(ScrollState.IDLE)
                 settleScroller.finalX.toFloat()
             } else {
                 settleScroller.currX.toFloat()
             }
-//            Log.i("ArcLayout", "computeScroll: settleScroller offset $offset")
             requestLayout()
             invalidate()
         }
         if (flingScroller.computeScrollOffset()) {
             arcScrollX = if (flingScroller.isFinished) {
-//                Log.i("ArcLayout", "computeScroll: isfinished")
                 flingScroller.finalX.toFloat()
             } else {
                 flingScroller.currX.toFloat()
             }
-//            Log.i("ArcLayout", "computeScroll: currVelocity ${flingScroller.currVelocity}")
-            validateOffsetAndCurrentIndex()
             requestLayout()
             invalidate()
-            if (flingScroller.currVelocity < 2000f) {
+            if (flingScroller.currVelocity < minimumVelocity) {
                 flingScroller.abortAnimation()
                 autoSettle()
+                postInvalidateOnAnimation()
             }
         }
     }
 
-    private fun validateOffsetAndCurrentIndex() {
-        if (state.currentIndex == 1) {
-            if (offset > 0) {
-                offset = 0f
-            }
-        }
-        if (state.currentIndex == childCount - 2) {
-            if (offset < 0) {
-                offset = 0f
-            }
-        }
-        val frame = computeChildFrame(state.currentIndex)
-        val anchorWidth = frame.width() / 2 + state.span / 2
-        if (offset > anchorWidth) {
-            state.currentIndex--
-            offset -= anchorWidth * 2
-        }
-        if (offset < 0 && -offset > anchorWidth) {
-            state.currentIndex++
-            offset += anchorWidth * 2
-        }
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        velocityTracker.recycle()
     }
-
-    private fun autoSettle() {
-        smoothScrollTo(state.currentIndex)
-    }
-
-    private fun smoothScrollTo(index: Int) {
-        val dx = if (index == state.currentIndex) {
-            -offset
-        } else {
-            val frame = computeChildFrame(index)
-            val currentFrame = computeChildFrame(state.currentIndex)
-            -(frame.centerX() - currentFrame.centerX() + offset)
-        }
-        Log.i("ArcLayout", "smoothScrollTo: offset $offset dx $dx")
-        settleScroller.startScroll(arcScrollX.toInt(), 0, dx.toInt(), 0)
-        invalidate()
-    }
-
-    private val downPoint = PointF()
-    private var dragging = false
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.action) {
-            MotionEvent.ACTION_DOWN -> {
-                downPoint.set(ev.x, ev.y)
-                dragging = false
-            }
-            MotionEvent.ACTION_MOVE -> {
-            }
-            MotionEvent.ACTION_CANCEL,
-            MotionEvent.ACTION_UP -> {
-            }
-            else -> {
-                // skip
-            }
-        }
-        return true
-    }
-
-    private val lastPoint = PointF()
-    private var offset = 0f
-    private var arcScrollX = 0f
-        set(value) {
-            if (field != value) {
-                val delta = field - value
-                field = value
-                offset -= delta
-                validateOffsetAndCurrentIndex()
-            }
-        }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
@@ -187,32 +114,35 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
                 if (!flingScroller.isFinished) {
                     flingScroller.abortAnimation()
                 }
-                dragging = false
+                state.dragging = false
                 velocityTracker.clear()
                 velocityTracker.addMovement(event)
             }
             MotionEvent.ACTION_MOVE -> {
                 velocityTracker.addMovement(event)
-                velocityTracker.computeCurrentVelocity(1000, maximumVelocity.toFloat())
-                if (!dragging && childCount >= 3) {
+                if (!state.dragging && childCount >= 3) {
                     val xDelta = abs(event.x - lastPoint.x)
                     if (xDelta > touchSlop) {
-                        dragging = true
+                        state.dragging = true
+                        notifyScrollStateChanged(ScrollState.DRAGGING)
                     }
                 }
-                if (dragging) {
+                if (state.dragging) {
                     val xDelta = event.x - lastPoint.x
                     arcScrollX += xDelta
-                    validateOffsetAndCurrentIndex()
                     requestLayout()
                 }
             }
+            MotionEvent.ACTION_CANCEL,
             MotionEvent.ACTION_UP -> {
-                if (dragging) {
-                    Log.i("ArcLayout", "onTouchEvent: up dragging ${velocityTracker.xVelocity}")
-                    if (velocityTracker.xVelocity < 2000) {
+                velocityTracker.addMovement(event)
+                if (state.dragging) {
+                    velocityTracker.computeCurrentVelocity(1000, maximumVelocity.toFloat())
+                    if (abs(velocityTracker.xVelocity) <= minimumVelocity) {
+                        notifyScrollStateChanged(ScrollState.SETTLING)
                         autoSettle()
                     } else {
+                        notifyScrollStateChanged(ScrollState.FLING)
                         flingScroller.fling(
                             arcScrollX.toInt(),
                             0,
@@ -224,15 +154,19 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
                             Int.MAX_VALUE
                         )
                     }
+                    postInvalidateOnAnimation()
                 }
                 velocityTracker.clear()
             }
         }
         lastPoint.set(event.x, event.y)
-//        return super.onTouchEvent(event)
+        super.onTouchEvent(event)
         return true
     }
 
+    /**
+     * 添加项
+     */
     fun addItem(view: View) {
         if (childCount == 2) {
             state.currentIndex = 1
@@ -249,6 +183,66 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             }
             addView(view, state.currentIndex)
         }
+    }
+
+    /**
+     * 设置当前位置
+     */
+    fun setCurrentIndex(index: Int) {
+        smoothScrollTo(index)
+    }
+
+    fun getCurrentIndex(): Int {
+        return state.currentIndex
+    }
+
+    fun addScrollChangeListener(listener: OnScrollChangeListener) {
+        scrollStateListeners.add(listener)
+    }
+
+    fun removeScrollChangeListener(listener: OnScrollChangeListener) {
+        scrollStateListeners.remove(listener)
+    }
+
+    private fun updateOffsetAndCurrentIndex(delta: Float) {
+        val oldOffset = state.offset
+        val oldIndex = state.currentIndex
+        state.offset += delta
+        if (state.currentIndex == 1 && state.offset > 0) {
+            state.offset = 0f
+        }
+        if (state.currentIndex == childCount - 2 && state.offset < 0) {
+            state.offset = 0f
+        }
+        val frame = computeChildFrame(state.currentIndex)
+        val anchorWidth = frame.width() / 2 + state.span / 2
+        if (state.offset > anchorWidth) {
+            state.currentIndex--
+            state.offset -= anchorWidth * 2
+        }
+        if (state.offset < 0 && -state.offset > anchorWidth) {
+            state.currentIndex++
+            state.offset += anchorWidth * 2
+        }
+        if (oldOffset != state.offset || oldIndex != state.currentIndex) {
+            notifyScrollOffsetChanged(oldIndex, oldOffset, state.currentIndex, state.offset)
+        }
+    }
+
+    private fun autoSettle() {
+        smoothScrollTo(state.currentIndex)
+    }
+
+    private fun smoothScrollTo(index: Int) {
+        val dx = if (index == state.currentIndex) {
+            -state.offset
+        } else {
+            val frame = computeChildFrame(index)
+            val currentFrame = computeChildFrame(state.currentIndex)
+            -(frame.centerX() - currentFrame.centerX() + state.offset)
+        }
+        settleScroller.startScroll(arcScrollX.toInt(), 0, dx.toInt(), 0)
+        invalidate()
     }
 
     private fun computeChildFrame(index: Int): Rect {
@@ -278,7 +272,7 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             }
         }
         val indexDelta = index - state.currentIndex
-        val childCenterX = centerX + indexDelta * (childWidth + state.span) + offset.toInt()
+        val childCenterX = centerX + indexDelta * (childWidth + state.span) + state.offset.toInt()
         val left = childCenterX - childWidth / 2
         val top = computeChildTop(left, childWidth, childHeight)
         return Rect(
@@ -293,44 +287,69 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
         return state.centerY - (yDelta + childHeight / 2)
     }
 
-    private fun computeCurrentIndexAfterAdded(index: Int) {
-        if (childCount == 3) {
-            state.currentIndex = 1
+    private fun notifyScrollStateChanged(scrollState: ScrollState) {
+        if (state.scrollState == scrollState) {
+            return
+        }
+
+        val oldState = state.scrollState
+        state.scrollState = scrollState
+        post {
+            scrollStateListeners.forEach { it.onScrollStateChanged(oldState, scrollState) }
         }
     }
 
-    private fun computeCurrentIndexAfterRemove(index: Int) {
-        if (childCount < 3) {
-            state.currentIndex = -1
-        }
-        if (childCount == 3) {
-            state.currentIndex = 1
-        }
-        if (index == -1) return
-        when {
-            index == state.currentIndex -> {
-            }
-            index < state.currentIndex -> {
-            }
-            index > state.currentIndex -> {
-                // skip
-            }
+    private fun notifyScrollOffsetChanged(oldIndex: Int, oldOffset: Float, newIndex: Int, newOffset: Float) {
+        post {
+            scrollStateListeners.forEach { it.onScrollOffsetChanged(oldIndex, oldOffset, newIndex, newOffset) }
         }
     }
 
-    fun setCurrentIndex(index: Int) {
-        smoothScrollTo(index)
+    interface OnScrollChangeListener {
+
+        fun onScrollOffsetChanged(oldIndex: Int, oldOffset: Float, newIndex: Int, newOffset: Float) = Unit
+        fun onScrollStateChanged(oldState: ScrollState, newState: ScrollState) = Unit
     }
 
     private class State(
+
+        /**
+         * 元素不足 3 个时为 -1
+         */
         var currentIndex: Int = -1,
         var centerX: Int = 0,
         var centerY: Int = 0,
-        var span: Int = 60
+
+        /**
+         * 项水平间距
+         */
+        var span: Int = 60,
+
+        /**
+         * 当前滚动状态
+         */
+        var scrollState: ScrollState = ScrollState.IDLE,
+
+        /**
+         * 当前偏移量
+         */
+        var offset: Float = 0f,
+
+        /**
+         * 手势是否处于拖拽状态
+         */
+        var dragging: Boolean = false
     )
 
     private class ViewHolder(
         val view: View,
         val info: Any,
     )
+
+    enum class ScrollState {
+        IDLE,
+        DRAGGING,
+        FLING,
+        SETTLING
+    }
 }
