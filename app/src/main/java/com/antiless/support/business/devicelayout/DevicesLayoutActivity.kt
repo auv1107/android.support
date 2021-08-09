@@ -22,6 +22,9 @@ class DevicesLayoutActivity : AppCompatActivity() {
             arcLayout.addItem(View(this).apply {
                 setBackgroundColor(Color.GREEN)
                 layoutParams = ViewGroup.LayoutParams(100, 100)
+                setOnClickListener {
+                    arcLayout.removeItem(this)
+                }
             })
         }
         btn2.setOnClickListener {

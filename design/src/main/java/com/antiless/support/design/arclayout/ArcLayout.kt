@@ -185,6 +185,28 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
         }
     }
 
+    fun removeItem(view: View) {
+        if (childCount <= 3) {
+            state.currentIndex = -1
+            state.offset = 0f
+            removeView(view)
+            return
+        }
+        val index = indexOfChild(view)
+        if (index == -1) return
+
+        if (index < state.currentIndex) {
+            state.currentIndex -= 1
+        }
+        if (state.currentIndex >= childCount - 2) {
+            state.currentIndex = childCount - 3
+        }
+        if (state.currentIndex <= 1) {
+            state.currentIndex = 1
+        }
+        removeView(view)
+    }
+
     /**
      * 设置当前位置
      */
