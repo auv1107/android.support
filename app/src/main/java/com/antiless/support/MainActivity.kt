@@ -3,9 +3,9 @@ package com.antiless.support
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.antiless.support.business.devicelayout.DevicesLayoutActivity
 import com.antiless.support.business.main.adapter.MainActionAdapter
 import com.antiless.support.business.main.utils.getMainActionModels
+import com.antiless.support.business.raylayout.RayLayoutActivity
 import kotlinx.android.synthetic.main.activity_main.list
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +19,6 @@ class MainActivity : AppCompatActivity() {
         mainActionAdapter.setData(
             getMainActionModels()
         )
-        startActivity(Intent(this, DevicesLayoutActivity::class.java))
+        startActivity(Intent(this, RayLayoutActivity::class.java))
     }
 }

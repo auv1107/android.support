@@ -2,6 +2,7 @@ package com.antiless.support.business.main.utils
 
 import com.antiless.support.business.devicelayout.DevicesLayoutActivity
 import com.antiless.support.business.main.mvp.model.MainActionItemModel
+import com.antiless.support.business.raylayout.RayLayoutActivity
 
 /**
  * 主页数据
@@ -10,7 +11,8 @@ import com.antiless.support.business.main.mvp.model.MainActionItemModel
  */
 
 val MAIN_ACTIONS = listOf(
-    MainAction("设备列表布局", DevicesLayoutActivity::class.java)
+    MainAction("设备列表布局", DevicesLayoutActivity::class.java),
+    MainAction("射线布局", RayLayoutActivity::class.java),
 )
 
 class MainAction(
