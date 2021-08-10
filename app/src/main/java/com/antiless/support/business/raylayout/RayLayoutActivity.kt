@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.antiless.support.R
 import com.antiless.support.design.raylayout.RayDrawable
+import com.antiless.support.design.raylayout.addRay
 import kotlinx.android.synthetic.main.activity_ray_layout.blue
 import kotlinx.android.synthetic.main.activity_ray_layout.contentView
 import kotlinx.android.synthetic.main.activity_ray_layout.image
@@ -15,6 +16,7 @@ import kotlinx.android.synthetic.main.activity_ray_layout.red
 import kotlinx.android.synthetic.main.activity_ray_layout.yellow
 
 class RayLayoutActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ray_layout)
@@ -39,12 +41,22 @@ class RayLayoutActivity : AppCompatActivity() {
         }
         contentView.post {
             contentView.overlay.add(RayDrawable(bitmap).apply {
-                addRay(blue, red).apply {
-                    duration = 3000
-                    isPersistent = true
-                    start()
+                addRay(contentView, blue, red).apply {
+                    with(info) {
+                        duration = 3000
+                        doOnEnd = {
+                            Log.i("RayLayoutActivity", "onCreate: End")
+                        }
+                        start()
+                    }
                 }
-                addRay(blue, yellow).apply { duration = 3000 }.start()
+                addRay(contentView, blue, yellow).apply {
+                    with(info) {
+                        duration = 3000
+                        isPersistent = true
+                        start()
+                    }
+                }
             })
         }
     }
