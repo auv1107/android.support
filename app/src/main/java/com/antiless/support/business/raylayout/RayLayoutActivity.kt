@@ -1,7 +1,8 @@
 package com.antiless.support.business.raylayout
 
 import android.animation.ValueAnimator
-import android.graphics.Rect
+import android.graphics.BitmapFactory
+import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -26,28 +27,24 @@ class RayLayoutActivity : AppCompatActivity() {
             repeatCount = -1
             start()
         }
+        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.images_line)
         image.post {
             Log.i("RayLayoutActivity", "onCreate: width height ${image.width} ${image.height}")
-            image.setImageDrawable(RayDrawable().apply {
+            image.setImageDrawable(RayDrawable(bitmap).apply {
                 addRay(
-                    Rect(0, 0, 100, 100),
-                    Rect(1000, 1000, 1100, 1100),
+                    RayDrawable.Circle(PointF(50f, 50f), 100f),
+                    RayDrawable.Circle(PointF(1050f, 1050f), 100f),
                 )
             })
         }
         contentView.post {
-            contentView.overlay.add(RayDrawable().apply {
-                addRay(
-                    Rect(0, 0, 100, 100),
-                    Rect(1000, 1000, 1100, 1100),
-                ).apply {
-                    start()
-                }
+            contentView.overlay.add(RayDrawable(bitmap).apply {
                 addRay(blue, red).apply {
                     duration = 3000
+                    isPersistent = true
                     start()
                 }
-                addRay(blue, yellow).start()
+                addRay(blue, yellow).apply { duration = 3000 }.start()
             })
         }
     }
