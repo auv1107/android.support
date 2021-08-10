@@ -9,11 +9,16 @@ import android.graphics.PixelFormat
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.os.SystemClock
+import android.util.Log
+import android.view.View
+import android.view.ViewTreeObserver
+import java.lang.ref.WeakReference
 import kotlin.math.PI
 import kotlin.math.atan
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -27,11 +32,10 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
     private val rayAnimationInfoList = mutableListOf<RayAnimationInfo>()
     private val bitmapRect = Rect(0, 0, rayBitmap.width, rayBitmap.height)
     private val listToClear = mutableListOf<RayAnimationInfo>()
+    private val clipRect = RectF()
+    private val dstRect = Rect()
 
     override fun draw(canvas: Canvas) {
-        canvas.drawRect(
-            bounds,
-            Paint().apply { color = Color.CYAN })
         rayAnimationInfoList.forEach {
             drawDebugContent(canvas, it)
             drawRay(canvas, it)
@@ -40,27 +44,9 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
             removeRay(it)
         }
         listToClear.clear()
-    }
-
-    private fun drawRay(canvas: Canvas, ray: RayAnimationInfo) {
-        canvas.save()
-        canvas.rotate(ray.degreeToVertical, ray.fromCircle.center.x, ray.fromCircle.center.y)
-
-        val left = ray.fromCircle.center.x - rayBitmap.width / 2
-        val right = ray.fromCircle.center.x + rayBitmap.width / 2
-        val top = ray.fromCircle.center.y - (ray.distance - ray.toCircle.radius)
-        val bottom = ray.fromCircle.center.y - ray.fromCircle.radius
-        canvas.clipRect(RectF(left, (top - bottom) * ray.fraction + bottom, right, bottom))
-        canvas.drawBitmap(
-            rayBitmap,
-            bitmapRect,
-            Rect(left.toInt(), top.toInt(), right.toInt(), bottom.toInt()),
-            Paint(Paint.FILTER_BITMAP_FLAG).apply { }
-        )
-        if (ray.started && ray.duration != 0L && ray.fraction == 1f) {
-            doOnEnd(ray)
+        if (rayAnimationInfoList.isNotEmpty()) {
+            invalidateSelf()
         }
-        canvas.restore()
     }
 
     private fun drawDebugContent(canvas: Canvas, ray: RayAnimationInfo) {
@@ -94,6 +80,43 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         return animationInfo
     }
 
+    fun addRayForView(overlayView: View, fromView: View, toView: View): RayAnimationInfo {
+        val fromCircle = fromView.getInnerCircle(overlayView)
+        val toCircle = toView.getInnerCircle(overlayView)
+        val info = RayViewAnimationInfo(fromCircle, toCircle)
+        val fromViewPreDrawListener = object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                return if (hasRay(info)) {
+                    val center = fromView.getCenterPoint(overlayView)
+                    info.fromCircle.center.set(center)
+                    invalidateSelf()
+                    true
+                } else {
+                    fromView.viewTreeObserver.removeOnPreDrawListener(this)
+                    false
+                }
+            }
+        }
+        val toViewPreDrawListener = object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                return if (hasRay(info)) {
+                    val center = toView.getCenterPoint(overlayView)
+                    info.toCircle.center.set(center)
+                    invalidateSelf()
+                    true
+                } else {
+                    toView.viewTreeObserver.removeOnPreDrawListener(this)
+                    false
+                }
+            }
+        }
+        fromView.viewTreeObserver.addOnPreDrawListener(fromViewPreDrawListener)
+        toView.viewTreeObserver.addOnPreDrawListener(toViewPreDrawListener)
+        info.holder = RayViewHolder(fromView, toView, fromViewPreDrawListener, toViewPreDrawListener)
+        rayAnimationInfoList.add(info)
+        return info
+    }
+
     fun removeRay(ray: RayAnimationInfo) {
         rayAnimationInfoList.remove(ray)
         invalidateSelf()
@@ -103,6 +126,38 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         return rayAnimationInfoList.contains(ray)
     }
 
+    fun destroy() {
+        rayAnimationInfoList.forEach {
+            it.destroy()
+        }
+        rayAnimationInfoList.clear()
+    }
+
+    private fun drawRay(canvas: Canvas, ray: RayAnimationInfo) {
+        canvas.save()
+        Log.i("RayDrawable", "drawRay: degreeToVertical ${ray.degreeToVertical}")
+        canvas.rotate(ray.degreeToVertical, ray.fromCircle.center.x, ray.fromCircle.center.y)
+
+        val left = ray.fromCircle.center.x - rayBitmap.width / 2
+        val right = ray.fromCircle.center.x + rayBitmap.width / 2
+        val top = ray.fromCircle.center.y - (ray.distance - ray.toCircle.radius)
+        val bottom = ray.fromCircle.center.y - ray.fromCircle.radius
+        dstRect.set(left.toInt(), top.toInt(), right.toInt(), bottom.toInt())
+        clipRect.set(left, (top - bottom) * ray.fraction + bottom, right, bottom)
+        canvas.clipRect(clipRect)
+        canvas.drawBitmap(
+            rayBitmap,
+            bitmapRect,
+            dstRect,
+            null
+        )
+        canvas.drawRect(dstRect, Paint().apply { color = Color.RED })
+        if (ray.started && ray.duration != 0L && ray.fraction == 1f) {
+            doOnEnd(ray)
+        }
+        canvas.restore()
+    }
+
     private fun doOnEnd(ray: RayAnimationInfo) {
         if (!ray.isPersistent) {
             listToClear.add(ray)
@@ -110,33 +165,31 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         ray.onEnd()
     }
 
-    class RayAnimationInfo(
+    open class RayAnimationInfo(
         val fromCircle: Circle,
         val toCircle: Circle,
     ) {
+        private var startTime: Long = 0
         val degreeToVertical: Float
             get() {
                 val dx = toCircle.center.x - fromCircle.center.x
                 val dy = -(toCircle.center.y - fromCircle.center.y)
-                if (dy == 0f) {
-                    return if (dx > 0) 90f else 270f
-                }
-                return (atan(dx / dy) * 180 / PI).toFloat()
+                val degree = if (dy == 0f) 90f else (atan(dx / dy) * 180 / PI).toFloat()
+                return if (dy < 0) degree + 180f else degree
             }
-        private var startTime: Long = 0
+        val distance: Float
+            get() = fromCircle.distanceTo(toCircle)
         var isPersistent = false
         var started: Boolean = false
         var duration: Long = 0
         var doOnStart: () -> Unit = {}
-        var doOnEnd: () -> Unit = {}
 
+        var doOnEnd: () -> Unit = {}
         val fraction: Float
             get() {
                 return if (duration == 0L) 1f
                 else (SystemClock.elapsedRealtime() - startTime).coerceAtMost(duration).toFloat() / duration
             }
-        val distance: Float
-            get() = fromCircle.distanceTo(toCircle)
 
         fun start() {
             startTime = SystemClock.elapsedRealtime()
@@ -148,61 +201,38 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
             started = false
             doOnEnd()
         }
+
+        open fun destroy() = Unit
     }
 
-    open class Animation : Animatable {
+    class RayViewAnimationInfo(fromCircle: Circle, toCircle: Circle) :
+        RayAnimationInfo(fromCircle, toCircle) {
 
-        private var startTime: Long = 0L
-        protected var running: Boolean = false
-        var doOnEnd: () -> Unit = {}
-        var doOnStart: () -> Unit = {}
-        var duration: Long = 0L
+        var holder: RayViewHolder? = null
 
-        val fraction: Float
-            get() {
-                return if (duration == 0L) 1f
-                else (SystemClock.elapsedRealtime() - startTime).coerceAtMost(duration).toFloat() / duration
-            }
-
-        override fun start() {
-            running = true
-            startTime = SystemClock.elapsedRealtime()
-        }
-
-        override fun stop() {
-            TODO("Not yet implemented")
-        }
-
-        override fun isRunning(): Boolean {
-            return running
+        override fun destroy() {
+            holder?.destroy()
         }
     }
 
-    class AnimationSet : Animation() {
+    class RayViewHolder(
+        fromView: View,
+        toView: View,
+        fromViewPreDrawListener: ViewTreeObserver.OnPreDrawListener,
+        toViewPreDrawListener: ViewTreeObserver.OnPreDrawListener,
+    ) {
+        private val weakFromView = WeakReference(fromView)
+        private val weakToView = WeakReference(toView)
+        private val weakFromListener = WeakReference(fromViewPreDrawListener)
+        private val weakToListener = WeakReference(toViewPreDrawListener)
 
-        private val list = mutableListOf<Animation>()
-
-        override fun start() {
-            running = true
-            doOnStart()
-            startAnimation(0)
-        }
-
-        private fun startAnimation(index: Int) {
-            list[index].apply {
-                doOnEnd = {
-                    if (index == list.size - 1) {
-                        onEnd()
-                    } else {
-                        startAnimation(index + 1)
-                    }
-                }
-                start()
+        fun destroy() {
+            weakFromListener.get()?.let {
+                weakFromView.get()?.viewTreeObserver?.removeOnPreDrawListener(it)
             }
-        }
-
-        private fun onEnd() {
-            doOnEnd()
+            weakToListener.get()?.let {
+                weakToView.get()?.viewTreeObserver?.removeOnPreDrawListener(it)
+            }
         }
     }
 
@@ -221,15 +251,43 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
             return "center: $center radius: $radius"
         }
     }
+}
 
-    interface AnimationListener {
-        fun onStart()
-        fun onEnd()
+private fun View.getInnerCircle(containerView: View): RayDrawable.Circle {
+    val bounds = getBoundsInContainer(containerView)
+    return RayDrawable.Circle(
+        PointF(bounds.centerX().toFloat(), bounds.centerY().toFloat()),
+        min(bounds.width(), bounds.height()) / 2f
+    )
+}
+
+private fun View.getOuterCircle(containerView: View): RayDrawable.Circle {
+    val bounds = getBoundsInContainer(containerView)
+    return RayDrawable.Circle(
+        PointF(bounds.centerX().toFloat(), bounds.centerY().toFloat()),
+        max(bounds.width(), bounds.height()) / 2f
+    )
+}
+
+private fun View.getBoundsInContainer(containerView: View): Rect {
+    return getBoundsInScreen().apply {
+        val containerBounds = containerView.getBoundsInScreen()
+        offset(-containerBounds.left, -containerBounds.top)
     }
 }
 
-fun Rect.distanceTo(other: Rect): Float {
-    val deltaX = centerX() - other.centerX()
-    val deltaY = centerY() - other.centerY()
-    return sqrt(deltaX.toFloat().pow(2) + deltaY.toFloat().pow(2))
+private fun View.getCenterPoint(containerView: View): PointF {
+    val bounds = getBoundsInScreen()
+    return PointF(bounds.centerX().toFloat(), bounds.centerY().toFloat()).apply {
+        val containerBounds = containerView.getBoundsInScreen()
+        offset(-containerBounds.left.toFloat(), -containerBounds.top.toFloat())
+    }
+}
+
+private fun View.getBoundsInScreen(): Rect {
+    return Rect(0, 0, measuredWidth, measuredHeight).apply {
+        val location = IntArray(2)
+        getLocationOnScreen(location)
+        offset(location[0], location[1])
+    }
 }
