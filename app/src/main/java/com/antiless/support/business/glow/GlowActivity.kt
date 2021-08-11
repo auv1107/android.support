@@ -12,7 +12,7 @@ class GlowActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_glow)
 
-
-        glow.setImageDrawable(GlowDrawable(Color.parseColor("#5724C789"), Color.parseColor("#5724C789")))
+//        glow.setImageDrawable(GlowDrawable(Color.parseColor("#5724C789"), Color.parseColor("#5724C789")))
+        glow.foreground = GlowDrawable(Color.parseColor("#5724C789"), Color.parseColor("#5724C789"))
     }
 }

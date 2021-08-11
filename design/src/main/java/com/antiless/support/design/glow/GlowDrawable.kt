@@ -28,7 +28,7 @@ class GlowDrawable(val borderColor: Int, val glowColor: Int, val borderWidth: In
     }
 
     private fun createShader(): RadialGradient {
-        val radius = bounds.width() / 2f
+        val radius = bounds.width() / 2f + borderWidth + glowWidth
         val borderEnd = radius - glowWidth
         val borderStart = borderEnd - borderWidth
         val glowStart = borderEnd
@@ -47,7 +47,8 @@ class GlowDrawable(val borderColor: Int, val glowColor: Int, val borderWidth: In
     }
 
     override fun draw(canvas: Canvas) {
-        canvas.drawCircle(bounds.centerX().toFloat(), bounds.centerY().toFloat(), bounds.width() / 2f, paint)
+        val radius = bounds.width() / 2f + borderWidth + glowWidth
+        canvas.drawCircle(bounds.centerX().toFloat(), bounds.centerY().toFloat(), radius, paint)
     }
 
     override fun setAlpha(alpha: Int) = Unit

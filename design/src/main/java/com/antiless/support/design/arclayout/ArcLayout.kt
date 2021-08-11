@@ -1,8 +1,6 @@
 package com.antiless.support.design.arclayout
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.Rect
 import android.util.AttributeSet
@@ -86,13 +84,6 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         measureChildren(widthMeasureSpec, heightMeasureSpec)
-    }
-
-    override fun dispatchDraw(canvas: Canvas?) {
-        canvas?.drawColor(
-            Color.RED
-        )
-        super.dispatchDraw(canvas)
     }
 
     override fun computeScroll() {
@@ -230,11 +221,11 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
     /**
      * 设置当前位置
      */
-    fun setCurrentIndex(index: Int) {
+    fun setCurrentItem(index: Int) {
         smoothScrollTo(index)
     }
 
-    fun getCurrentIndex(): Int {
+    fun getCurrentItem(): Int {
         return state.currentIndex
     }
 

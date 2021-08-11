@@ -153,7 +153,7 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
             dstRect,
             null
         )
-        canvas.drawRect(dstRect, Paint().apply { color = Color.RED })
+//        canvas.drawRect(dstRect, Paint().apply { color = Color.RED })
         if (ray.started && ray.duration != 0L && ray.fraction == 1f) {
             doOnEnd(ray)
         }

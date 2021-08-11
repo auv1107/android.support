@@ -20,7 +20,7 @@ class DevicesLayoutActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             arcLayout.addItem(View(this).apply {
-                setBackgroundColor(Color.GREEN)
+                setBackgroundColor(resources.getColor(android.R.color.holo_green_light))
                 layoutParams = ViewGroup.LayoutParams(100, 100)
                 setOnClickListener {
                     arcLayout.removeItem(this)
@@ -28,11 +28,11 @@ class DevicesLayoutActivity : AppCompatActivity() {
             })
         }
         btn2.setOnClickListener {
-            arcLayout.setCurrentIndex(2)
+            arcLayout.setCurrentItem(2)
         }
         rawArc.setOnClickListener {
             Log.i("DevicesLayoutActivity", "onCreate: rawArc clicked")
-            arcLayout.setCurrentIndex(2)
+            arcLayout.setCurrentItem(2)
         }
         arcLayout.addScrollChangeListener(object : ArcLayout.OnScrollChangeListener {
 

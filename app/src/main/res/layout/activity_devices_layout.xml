@@ -10,7 +10,7 @@
         android:id="@+id/arcLayout"
         android:layout_width="match_parent"
         app:radiusRatioBasedOnWidth="0.8"
-        app:span="100dp"
+        app:span="30dp"
         android:layout_height="300dp"
         android:animateLayoutChanges="true"
         app:layout_constraintTop_toTopOf="parent">
