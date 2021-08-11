@@ -13,6 +13,7 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.OverScroller
 import android.widget.Scroller
+import com.antiless.support.design.R
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -49,10 +50,29 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             }
         }
 
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ArcLayout)
+        state.span = a.getDimensionPixelSize(R.styleable.ArcLayout_span, state.span)
+        state.radiusRatioBasedOnWidth =
+            a.getFloat(R.styleable.ArcLayout_radiusRatioBasedOnWidth, state.radiusRatioBasedOnWidth)
+        state.radius = a.getDimensionPixelSize(R.styleable.ArcLayout_android_radius, state.radius)
+        a.recycle()
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         state.centerX = w / 2
-        state.centerY = (w * 0.7).toInt()
+        when {
+            state.radiusRatioBasedOnWidth != 0f -> {
+                state.centerY = (w * state.radiusRatioBasedOnWidth).toInt()
+            }
+            state.radius != 0 -> {
+                state.centerY = state.radius
+            }
+            else -> {
+                state.centerY = h
+            }
+        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -349,6 +369,16 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
          * 项水平间距
          */
         var span: Int = 60,
+
+        /**
+         * 圆心半径
+         */
+        var radius: Int = 0,
+
+        /**
+         * 半径相对于宽度比例
+         */
+        var radiusRatioBasedOnWidth: Float = 0f,
 
         /**
          * 当前滚动状态

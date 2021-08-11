@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="span" format="dimension"/>
+    <attr name="radiusRatioBasedOnWidth" format="float"/>
+
+    <declare-styleable name="ArcLayout">
+        <attr name="span"/>
+        <attr name="android:radius"/>
+        <attr name="radiusRatioBasedOnWidth"/>
+    </declare-styleable>
+</resources>
