@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".business.animxml.AnimXmlActivity"></activity>
+        <activity android:name=".business.glow.GlowActivity"></activity>
+        <activity android:name=".business.animxml.AnimXmlActivity"/>
         <activity android:name=".business.raylayout.RayLayoutActivity"/>
         <activity android:name=".business.devicelayout.DevicesLayoutActivity"/>
         <activity android:name=".MainActivity">

@@ -56,9 +56,5 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 
-        <com.antiless.support.design.glow.GlowingRing
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.antiless.support.design.raylayout.RayAnimLayout>

@@ -165,8 +165,8 @@ class GlowingRing : View {
         )
         val colors = intArrayOf(
             Color.TRANSPARENT,
-            glowingColor,
-            glowingColor,
+            Color.TRANSPARENT,
+            Color.TRANSPARENT,
             bodyColor,
             bodyColor,
             glowingColor,
