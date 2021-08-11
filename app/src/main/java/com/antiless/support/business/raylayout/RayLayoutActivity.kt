@@ -50,36 +50,21 @@ class RayLayoutActivity : AppCompatActivity() {
                 }
             })
         }
-        contentView.post {
-            rayDrawable = RayDrawable(bitmap).apply {
-                addRay(
-                    RayDrawable.Circle(PointF(1050f, 1050f), 100f),
-                    RayDrawable.Circle(PointF(150f, 150f), 100f),
-                ).apply {
-                    duration = 3000
-                    start()
+        with(contentView) {
+            rayBitmap = bitmap
+            addRay(blue, red)?.apply {
+                duration = 3000
+                isPersistent = true
+                doOnEnd = {
+                    Log.i("RayLayoutActivity", "onCreate: End")
                 }
-                addRayForView(contentView, blue, red).apply {
-                    duration = 3000
-                    isPersistent = true
-                    doOnEnd = {
-                        Log.i("RayLayoutActivity", "onCreate: End")
-                    }
-                    start()
-                }
-                addRayForView(contentView, blue, yellow).apply {
-                    duration = 3000
-                    isPersistent = true
-                    start()
-                }
+                start()
             }
-
-            contentView.overlay.add(rayDrawable)
+            addRay(blue, yellow)?.apply {
+                duration = 3000
+                isPersistent = true
+                start()
+            }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        rayDrawable.destroy()
     }
 }

@@ -87,8 +87,9 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         val fromViewPreDrawListener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 return if (hasRay(info)) {
-                    val center = fromView.getCenterPoint(overlayView)
-                    info.fromCircle.center.set(center)
+                    val circle = fromView.getInnerCircle(overlayView)
+                    info.fromCircle.center.set(circle.center)
+                    info.fromCircle.radius = circle.radius
                     invalidateSelf()
                     true
                 } else {
@@ -100,8 +101,9 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         val toViewPreDrawListener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 return if (hasRay(info)) {
-                    val center = toView.getCenterPoint(overlayView)
-                    info.toCircle.center.set(center)
+                    val circle = toView.getInnerCircle(overlayView)
+                    info.toCircle.center.set(circle.center)
+                    info.toCircle.radius = circle.radius
                     invalidateSelf()
                     true
                 } else {
@@ -238,7 +240,7 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
 
     class Circle(
         val center: PointF,
-        val radius: Float
+        var radius: Float
     ) {
 
         fun distanceTo(other: Circle): Float {
