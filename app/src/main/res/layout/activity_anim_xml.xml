@@ -1,32 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    tools:context=".business.animxml.AnimXmlActivity">
+    android:layout_height="match_parent">
 
-    <View
-        android:id="@+id/orange"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="80dp"
-        android:background="@android:color/holo_orange_light"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="100dp"
+        tools:context=".business.animxml.AnimXmlActivity">
 
-    <View
-        android:id="@+id/blue"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="80dp"
-        android:background="@android:color/holo_blue_light"/>
+        <View
+            android:id="@+id/orange"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="80dp"
+            android:background="@android:color/holo_orange_light"/>
 
-    <View
-        android:id="@+id/red"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="80dp"
-        android:background="@android:color/holo_red_light"/>
+        <View
+            android:id="@+id/blue"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="80dp"
+            android:background="@android:color/holo_blue_light"/>
 
+        <View
+            android:id="@+id/red"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="80dp"
+            android:background="@android:color/holo_red_light"/>
 
-</LinearLayout>
+        <View
+            android:id="@+id/green"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="80dp"
+            android:background="@android:color/holo_green_light"/>
+
+        <View
+            android:id="@+id/green_sm"
+            android:layout_width="100dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="10dp"
+            android:background="@android:color/holo_green_dark"/>
+    </LinearLayout>
+</ScrollView>

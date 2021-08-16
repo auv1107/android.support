@@ -1,5 +1,7 @@
 package com.antiless.support.business.animxml
 
+import android.content.Context
+import android.util.TypedValue
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -7,6 +9,7 @@ import android.view.animation.AnimationSet
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
 import android.view.animation.ScaleAnimation
+import android.view.animation.TranslateAnimation
 
 /**
  *
@@ -36,6 +39,26 @@ fun applyThreeBodyAnimation(topView: View, middleView: View, bottomView: View) {
     }
     topView.startAnimation(topAnimationSet)
     middleView.startAnimation(middleAnimationSet)
+    bottomView.startAnimation(bottomAnimationSet)
+}
+
+fun applyDeviceAnimation(topView: View, bottomView: View) {
+    val alphaAnimation = AlphaAnimation(0f, 1f).apply {
+        duration = 120
+    }
+    val translateAnimation = TranslateAnimation(0f, 0f, -dpToPx(topView.context, 12f), 0f).apply {
+        duration = 400
+    }
+    val topAnimationSet = AnimationSet(true).apply {
+        interpolator = LinearInterpolator()
+        addAnimation(alphaAnimation)
+    }
+    val bottomAnimationSet = AnimationSet(true).apply {
+        interpolator = LinearInterpolator()
+        addAnimation(alphaAnimation)
+        addAnimation(translateAnimation)
+    }
+    topView.startAnimation(topAnimationSet)
     bottomView.startAnimation(bottomAnimationSet)
 }
 
@@ -69,4 +92,12 @@ private fun getAlphaAnimation(): AlphaAnimation {
         repeatCount = -1
         repeatMode = Animation.REVERSE
     }
+}
+
+private fun dpToPx(context: Context, dp: Float): Float {
+    val displayMetrics = context.resources.displayMetrics
+    return TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, dp,
+        displayMetrics
+    )
 }

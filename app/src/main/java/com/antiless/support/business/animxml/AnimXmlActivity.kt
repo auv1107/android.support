@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.antiless.support.R
 import kotlinx.android.synthetic.main.activity_anim_xml.blue
+import kotlinx.android.synthetic.main.activity_anim_xml.green
+import kotlinx.android.synthetic.main.activity_anim_xml.green_sm
 import kotlinx.android.synthetic.main.activity_anim_xml.orange
 import kotlinx.android.synthetic.main.activity_anim_xml.red
 
@@ -17,5 +19,8 @@ class AnimXmlActivity : AppCompatActivity() {
 
     private fun startAnim() {
         applyThreeBodyAnimation(orange, blue, red)
+        red.setOnClickListener {
+            applyDeviceAnimation(green, green_sm)
+        }
     }
 }

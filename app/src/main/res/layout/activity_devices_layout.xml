@@ -9,8 +9,8 @@
     <com.antiless.support.design.arclayout.ArcLayout
         android:id="@+id/arcLayout"
         android:layout_width="match_parent"
-        app:radiusRatioBasedOnWidth="0.8"
-        app:span="30dp"
+        app:radiusRatioBasedOnWidth="0.3"
+        app:degreeSpan="20"
         android:layout_height="300dp"
         android:animateLayoutChanges="true"
         app:layout_constraintTop_toTopOf="parent">
