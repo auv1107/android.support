@@ -37,7 +37,6 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
 
     override fun draw(canvas: Canvas) {
         rayAnimationInfoList.forEach {
-            drawDebugContent(canvas, it)
             drawRay(canvas, it)
         }
         listToClear.forEach {
@@ -47,19 +46,6 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
         if (rayAnimationInfoList.isNotEmpty()) {
             invalidateSelf()
         }
-    }
-
-    private fun drawDebugContent(canvas: Canvas, ray: RayAnimationInfo) {
-        canvas.drawCircle(
-            ray.toCircle.center.x,
-            ray.toCircle.center.y,
-            ray.toCircle.radius,
-            Paint().apply { color = Color.BLACK })
-        canvas.drawCircle(
-            ray.fromCircle.center.x,
-            ray.fromCircle.center.y,
-            ray.fromCircle.radius,
-            Paint().apply { color = Color.GREEN })
     }
 
     override fun setAlpha(alpha: Int) {
@@ -165,6 +151,19 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
             listToClear.add(ray)
         }
         ray.onEnd()
+    }
+
+    private fun drawDebugContent(canvas: Canvas, ray: RayAnimationInfo) {
+        canvas.drawCircle(
+            ray.toCircle.center.x,
+            ray.toCircle.center.y,
+            ray.toCircle.radius,
+            Paint().apply { color = Color.BLACK })
+        canvas.drawCircle(
+            ray.fromCircle.center.x,
+            ray.fromCircle.center.y,
+            ray.fromCircle.radius,
+            Paint().apply { color = Color.GREEN })
     }
 
     open class RayAnimationInfo(
