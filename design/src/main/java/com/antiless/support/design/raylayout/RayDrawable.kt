@@ -11,7 +11,6 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.SystemClock
-import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
 import java.lang.ref.WeakReference
@@ -123,7 +122,6 @@ class RayDrawable(private val rayBitmap: Bitmap) : Drawable() {
 
     private fun drawRay(canvas: Canvas, ray: RayAnimationInfo) {
         canvas.save()
-        Log.i("RayDrawable", "drawRay: degreeToVertical ${ray.degreeToVertical}")
         canvas.rotate(ray.degreeToVertical, ray.fromCircle.center.x, ray.fromCircle.center.y)
 
         val left = ray.fromCircle.center.x - rayBitmap.width / 2

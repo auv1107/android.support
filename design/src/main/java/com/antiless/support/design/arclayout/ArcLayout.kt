@@ -33,6 +33,7 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
     private val minimumVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
     private val velocityTracker = VelocityTracker.obtain()
 
+    private val downPoint = PointF()
     private val lastPoint = PointF()
 
     private val scrollStateListeners = mutableListOf<OnScrollChangeListener>()
@@ -84,13 +85,6 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             val child = getChildAt(i)
             val frame = computeChildFrame(i)
             child.layout(frame.left, frame.top, frame.right, frame.bottom)
-
-//            val degree = computeChildDegree(i)
-//            if (abs(degree) < 180) {
-//                child.visibility = View.VISIBLE
-//            } else {
-//                child.visibility = View.INVISIBLE
-//            }
         }
     }
 
@@ -144,25 +138,35 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
         velocityTracker.recycle()
     }
 
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        if (state.dragging && ev.action == MotionEvent.ACTION_MOVE) return true
+
+        when (ev.action) {
+            MotionEvent.ACTION_DOWN -> {
+                abortScroller()
+                recycleVelocityTracker()
+
+                downPoint.set(ev.x, ev.y)
+                state.dragging = false
+            }
+            MotionEvent.ACTION_MOVE -> {
+                validateDragging(ev)
+                lastPoint.set(ev.x, ev.y)
+            }
+        }
+        return state.dragging
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (!flingScroller.isFinished) {
-                    flingScroller.abortAnimation()
-                }
-                state.dragging = false
-                velocityTracker.clear()
+                abortScroller()
+                recycleVelocityTracker()
                 velocityTracker.addMovement(event)
             }
             MotionEvent.ACTION_MOVE -> {
                 velocityTracker.addMovement(event)
-                if (!state.dragging && childCount >= 3) {
-                    val xDelta = abs(event.x - lastPoint.x)
-                    if (xDelta > touchSlop) {
-                        state.dragging = true
-                        notifyScrollStateChanged(ScrollState.DRAGGING)
-                    }
-                }
+                validateDragging(event)
                 if (state.dragging) {
                     val xDelta = event.x - lastPoint.x
                     scrollRotation += xDelta * SCROLL_ROTATION_RATIO
@@ -192,7 +196,8 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
                     }
                     postInvalidateOnAnimation()
                 }
-                velocityTracker.clear()
+                recycleVelocityTracker()
+                state.dragging = false
             }
         }
         lastPoint.set(event.x, event.y)
@@ -296,6 +301,29 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
         state.radiusRatioBasedOnHeight = ratioBasedOnHeight
         state.centerY = (measuredHeight * state.radiusRatioBasedOnHeight).toInt()
         requestLayout()
+    }
+
+    private fun validateDragging(event: MotionEvent) {
+        if (!state.dragging && childCount >= 3) {
+            val xDelta = abs(event.x - downPoint.x)
+            if (xDelta > touchSlop) {
+                state.dragging = true
+                notifyScrollStateChanged(ScrollState.DRAGGING)
+            }
+        }
+    }
+
+    private fun recycleVelocityTracker() {
+        velocityTracker.clear()
+    }
+
+    private fun abortScroller() {
+        if (!flingScroller.isFinished) {
+            flingScroller.abortAnimation()
+        }
+        if (!settleScroller.isFinished) {
+            settleScroller.abortAnimation()
+        }
     }
 
     private fun updateOffsetAndCurrentIndex(delta: Float) {

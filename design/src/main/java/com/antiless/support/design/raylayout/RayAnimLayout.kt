@@ -23,6 +23,16 @@ class RayAnimLayout(context: Context, attributeSet: AttributeSet) : FrameLayout(
             }
         }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        rayDrawable?.setBounds(0, 0, w, h)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        destroyRayDrawable()
+    }
+
     fun addRay(fromView: View, toView: View): RayDrawable.RayAnimationInfo? {
         return rayDrawable?.addRayForView(this, fromView, toView)
     }
@@ -50,10 +60,5 @@ class RayAnimLayout(context: Context, attributeSet: AttributeSet) : FrameLayout(
         post {
             overlay.add(rayDrawable)
         }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        destroyRayDrawable()
     }
 }
