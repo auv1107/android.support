@@ -53,6 +53,8 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.ArcLayout)
         state.degreeSpan = a.getFloat(R.styleable.ArcLayout_degreeSpan, state.degreeSpan)
+        state.degreeSpanWhenTwoItems =
+            a.getFloat(R.styleable.ArcLayout_degreeSpanWhenTwoItems, state.degreeSpanWhenTwoItems)
         state.radiusRatioBasedOnWidth =
             a.getFloat(R.styleable.ArcLayout_radiusRatioBasedOnWidth, state.radiusRatioBasedOnWidth)
         state.radiusRatioBasedOnHeight =
@@ -380,7 +382,7 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
             )
         }
         if (childCount == 2) {
-            val degree = if (index == 0) -state.degreeSpan / 2 else state.degreeSpan / 2
+            val degree = if (index == 0) -state.degreeSpanWhenTwoItems / 2 else state.degreeSpanWhenTwoItems / 2
             val left = computeChildLeft(centerX, childWidth, degree)
             return Rect(
                 left, 0, left + childWidth, childHeight
@@ -447,6 +449,11 @@ class ArcLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, attr
          * 间隔角度
          */
         var degreeSpan: Float = 15f,
+
+        /**
+         * 只有两个项时的间隔角度
+         */
+        var degreeSpanWhenTwoItems: Float = 25f,
 
         /**
          * 圆心半径

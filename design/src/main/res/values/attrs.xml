@@ -2,13 +2,27 @@
 <resources>
 
     <attr name="degreeSpan" format="float"/>
+    <attr name="degreeSpanWhenTwoItems" format="float"/>
     <attr name="radiusRatioBasedOnWidth" format="float"/>
     <attr name="radiusRatioBasedOnHeight" format="float"/>
 
     <declare-styleable name="ArcLayout">
         <attr name="degreeSpan"/>
+        <attr name="degreeSpanWhenTwoItems"/>
         <attr name="android:radius"/>
         <attr name="radiusRatioBasedOnWidth"/>
         <attr name="radiusRatioBasedOnHeight"/>
+    </declare-styleable>
+
+    <attr name="borderColor" format="color"/>
+    <attr name="glowColor" format="color"/>
+    <attr name="borderWidth" format="dimension"/>
+    <attr name="glowWidth" format="dimension"/>
+
+    <declare-styleable name="GlowView">
+        <attr name="borderColor"/>
+        <attr name="glowColor"/>
+        <attr name="borderWidth"/>
+        <attr name="glowWidth"/>
     </declare-styleable>
 </resources>
